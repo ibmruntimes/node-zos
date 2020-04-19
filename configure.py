@@ -13,6 +13,7 @@ import subprocess
 import shutil
 import bz2
 import io
+import tempfile
 
 from distutils.spawn import find_executable as which
 from distutils.version import StrictVersion
@@ -719,16 +720,31 @@ def pkg_config(pkg):
 
 
 def try_check_compiler(cc, lang):
-  try:
-    proc = subprocess.Popen(shlex.split(cc) + ['-E', '-P', '-x', lang, '-'],
+  if sys.platform == 'zos':
+    f = tempfile.NamedTemporaryFile(delete=False, suffix=".cc")
+    f.write(b'__clang__ __GNUC__ __GNUC_MINOR__ __GNUC_PATCHLEVEL__ '
+            b'__clang_major__ __clang_minor__ __clang_patchlevel__')
+    os.system('chtag -tc 819 %s' % f.name)
+    f.close()
+    try:
+      proc = subprocess.Popen(shlex.split(cc) + ['-E', '-P', f.name ],
                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-  except OSError:
-    return (False, False, '', '')
-
+    except OSError:
+      return (False, False, '', '')
+  else:
+    try:
+      proc = subprocess.Popen(shlex.split(cc) + ['-E', '-P', '-x', lang, '-'],
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    except OSError:
+      return (False, False, '', '')
+  
   proc.stdin.write(b'__clang__ __GNUC__ __GNUC_MINOR__ __GNUC_PATCHLEVEL__ '
                    b'__clang_major__ __clang_minor__ __clang_patchlevel__')
-
-  values = (to_utf8(proc.communicate()[0]).split() + ['0'] * 7)[0:7]
+  
+  if sys.platform == 'zos':
+    values = (to_utf8(proc.communicate()[0]).split('\n')[-2].split() + ['0'] * 7)[0:7]
+  else:
+    values = (to_utf8(proc.communicate()[0]).split() + ['0'] * 7)[0:7]
   is_clang = values[0] == '1'
   gcc_version = tuple(map(int, values[1:1+3]))
   clang_version = tuple(map(int, values[4:4+3])) if is_clang else None
@@ -912,6 +928,8 @@ def host_arch_cc():
     # we only support gcc at this point and the default on AIX
     # would be xlc so hard code gcc
     k = cc_macros('gcc')
+  elif sys.platform.startswith('zos'):
+    return 's390x';
   else:
     k = cc_macros(os.environ.get('CC_host'))
 
@@ -1156,6 +1174,8 @@ def configure_node(o):
     shlib_suffix = '%s.dylib'
   elif sys.platform.startswith('aix'):
     shlib_suffix = '%s.a'
+  elif sys.platform.startswith('zos'):
+    shlib_suffix = 'x'
   else:
     shlib_suffix = 'so.%s'
   if '%s' in shlib_suffix:
