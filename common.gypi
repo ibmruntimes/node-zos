@@ -521,7 +521,7 @@
           '-q64',
           '-Wc,DLL',
           '-Wa,GOFF',
-          '-qARCH=9',
+          '-qARCH=10',
           '-qASCII',
           '-qTUNE=10',
           '-qENUM=INT',
