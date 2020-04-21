@@ -515,7 +515,7 @@
           '_LARGE_TIME_API',
           '_ALL_SOURCE',
           '__IBMCPP_TR1__',
-          'PATH_MAX=1023',
+          'PATH_MAX=1024',
         ],
         'cflags': [
           '-q64',
