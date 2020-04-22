@@ -166,7 +166,10 @@
             # pull in V8's postmortem metadata
             'ldflags': [ '-Wl,-z,allextract' ]
           }],
-          ['OS!="mac" and OS!="win"', {
+          ['OS=="zos"', {
+            'cflags': [ '-qINLINE=::150:100000' ]
+          }],
+          ['OS!="mac" and OS!="win" and OS!="zos"', {
             'cflags': [ '-fno-omit-frame-pointer' ],
           }],
           ['OS=="linux"', {
@@ -280,7 +283,7 @@
       [ 'target_arch=="arm64"', {
         'msvs_configuration_platform': 'arm64',
       }],
-      ['asan == 1 and OS != "mac"', {
+      ['asan == 1 and OS != "mac" and OS != "zos"', {
         'cflags+': [
           '-fno-omit-frame-pointer',
           '-fsanitize=address',
@@ -496,6 +499,41 @@
           #      see https://github.com/nodejs/node/pull/21848
           #      or https://github.com/nodejs/node/issues/27925
           'OPENSSL_NO_PINSHARED'
+        ]
+      }],
+      ['OS == "zos"', {
+        'defines': [
+          '_XOPEN_SOURCE_EXTENDED',
+          '_UNIX03_THREADS',
+          '_UNIX03_WITHDRAWN',
+          '_UNIX03_SOURCE',
+          '_OPEN_SYS_SOCK_IPV6',
+          '_POSIX_SOURCE',
+          '_OPEN_SYS',
+          '_OPEN_SYS_IF_EXT',
+          '_OPEN_SYS_SOCK_IPV6',
+          '_OPEN_MSGQ_EXT',
+          '_LARGE_TIME_API',
+          '_ALL_SOURCE',
+          '__IBMCPP_TR1__',
+          'PATH_MAX=1024',
+        ],
+        'cflags': [
+          '-q64',
+          '-Wc,DLL',
+          '-Wa,GOFF',
+          '-qARCH=10',
+          '-qASCII',
+          '-qTUNE=10',
+          '-qENUM=INT',
+          '-qEXPORTALL',
+          '-qASM',
+        ],
+        'cflags_cc': [
+          '-qxclang=-std=c++1y',
+        ],
+        'ldflags': [
+          '-q64',
         ],
       }],
       ['node_shared_openssl!="true"', {
