@@ -743,10 +743,10 @@ def try_check_compiler(cc, lang):
                               stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     except OSError:
       return (False, False, '', '')
-  
+
   proc.stdin.write(b'__clang__ __GNUC__ __GNUC_MINOR__ __GNUC_PATCHLEVEL__ '
                    b'__clang_major__ __clang_minor__ __clang_patchlevel__')
-  
+
   if sys.platform == 'zos':
     values = (to_utf8(proc.communicate()[0]).split('\n')[-2].split() + ['0'] * 7)[0:7]
   else:
