@@ -12,9 +12,9 @@
  * this software for any purpose.  It is provided "as is"
  * without express or implied warranty.
  */
-
+#ifdef __MVS__
 #include <strings.h>
-
+#endif
 #include "ares_setup.h"
 #include "ares_strsplit.h"
 #include "ares.h"
