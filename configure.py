@@ -1295,8 +1295,8 @@ def configure_static_library(lib, output):
 
     # Set library path
     if options.__dict__[static_lib + '_libpath']:
-        output['libraries'] += [
-            '-L%s' % options.__dict__[static_lib + '_libpath']]
+      output['libraries'] += [
+             '-L%s' % options.__dict__[static_lib + '_libpath']]
 
     default_libs = getattr(options, static_lib + '_libname')
     default_libs = ['-l{0}'.format(l) for l in default_libs.split(',')]
@@ -1305,7 +1305,6 @@ def configure_static_library(lib, output):
       output['libraries'] += default_libs
 
 def configure_zos(output):
-  # configure zoslib library only for now on z/OS
   configure_static_library('zoslib', output);
 
 def configure_v8(o):
