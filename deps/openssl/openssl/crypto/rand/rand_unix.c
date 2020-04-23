@@ -34,6 +34,9 @@
 #if defined(__OpenBSD__) || defined(__NetBSD__)
 # include <sys/param.h>
 #endif
+#if defined(__MVS__)
+# include "zos.h"
+#endif
 
 #if defined(OPENSSL_SYS_UNIX) || defined(__DJGPP__)
 # include <sys/types.h>
@@ -369,6 +372,8 @@ static ssize_t syscall_random(void *buf, size_t buflen)
 
     if (getentropy != NULL)
         return getentropy(buf, buflen) == 0 ? (ssize_t)buflen : -1;
+#  elif defined(__MVS__)
+    return getentropy(buf, buflen) == 0 ? (ssize_t)buflen : -1;
 #  else
     union {
         void *p;
