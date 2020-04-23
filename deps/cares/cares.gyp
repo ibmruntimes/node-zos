@@ -136,7 +136,6 @@
         }, {
           # Not Windows i.e. POSIX
           'cflags': [
-            '-g',
             '-pedantic',
             '-Wall',
             '-Wextra',
@@ -144,7 +143,7 @@
           ],
           'defines': [ 'HAVE_CONFIG_H' ],
         }],
-        [ 'OS not in "win android"', {
+        [ 'OS not in "win android zos"', {
           'cflags': [
             '--std=gnu89'
           ],
@@ -178,6 +177,13 @@
               '-lnsl'
             ]
           }
+        }],
+        [ 'OS=="zos"', {
+          'include_dirs': [ 'config/zos' ],
+          'sources': [ 'config/zos/ares_config.h' ],
+          'cflags': [
+            '-qascii'
+          ]
         }]
       ]
     }
