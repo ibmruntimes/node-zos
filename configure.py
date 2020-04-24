@@ -66,6 +66,9 @@ shared_optgroup = optparse.OptionGroup(parser, "Shared libraries",
     "Flags that allows you to control whether you want to build against "
     "built-in dependencies or its shared representations. If necessary, "
     "provide multiple libraries with comma.")
+static_optgroup = optparse.OptionGroup(parser, "Static libraries",
+    "Flags that allows you to control whether you want to build against "
+    "additional static libraries.")
 intl_optgroup = optparse.OptionGroup(parser, "Internationalization",
     "Flags that lets you enable i18n features in Node.js as well as which "
     "library you want to build against.")
@@ -345,6 +348,29 @@ shared_optgroup.add_option('--shared-cares-libpath',
     help='a directory to search for the shared cares DLL')
 
 parser.add_option_group(shared_optgroup)
+
+static_optgroup.add_option('--static-zoslib',
+    action='store_true',
+    dest='static_zoslib',
+    help='link to a static zoslib')
+
+static_optgroup.add_option('--static-zoslib-includes',
+    action='store',
+    dest='static_zoslib_includes',
+    help='directory containing zoslib header files')
+
+static_optgroup.add_option('--static-zoslib-libname',
+    action='store',
+    dest='static_zoslib_libname',
+    default='zoslib',
+    help='alternative lib name to link to [default: %default]')
+
+static_optgroup.add_option('--static-zoslib-libpath',
+    action='store',
+    dest='static_zoslib_libpath',
+    help='a directory to search for the static zoslib library')
+
+parser.add_option_group(static_optgroup)
 
 parser.add_option('--systemtap-includes',
     action='store',
@@ -1075,6 +1101,8 @@ def configure_node(o):
     configure_arm(o)
   elif target_arch in ('mips', 'mipsel', 'mips64el'):
     configure_mips(o)
+  elif sys.platform == 'zos':
+    configure_zos(o)
 
   if flavor == 'aix':
     o['variables']['node_target_type'] = 'static_library'
@@ -1256,6 +1284,28 @@ def configure_library(lib, output, pkgname=None):
     elif pkg_libs:
       output['libraries'] += pkg_libs.split()
 
+def configure_static_library(lib, output):
+  static_lib = 'static_' + lib
+  output['variables']['node_' + static_lib] = b(getattr(options, static_lib))
+
+  if getattr(options, static_lib):
+    # Apply to all Node.js components for now
+    if options.__dict__[static_lib + '_includes']:
+      output['include_dirs'] += [options.__dict__[static_lib + '_includes']]
+
+    # Set library path
+    if options.__dict__[static_lib + '_libpath']:
+      output['libraries'] += [
+             '-L%s' % options.__dict__[static_lib + '_libpath']]
+
+    default_libs = getattr(options, static_lib + '_libname')
+    default_libs = ['-l{0}'.format(l) for l in default_libs.split(',')]
+
+    if default_libs:
+      output['libraries'] += default_libs
+
+def configure_zos(output):
+  configure_static_library('zoslib', output);
 
 def configure_v8(o):
   o['variables']['v8_enable_gdbjit'] = 1 if options.gdb else 0
