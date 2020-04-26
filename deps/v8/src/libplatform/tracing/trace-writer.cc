@@ -131,8 +131,14 @@ JSONTraceWriter::~JSONTraceWriter() { stream_ << "]}"; }
 void JSONTraceWriter::AppendTraceEvent(TraceObject* trace_event) {
   if (append_comma_) stream_ << ",";
   append_comma_ = true;
+#if defined(V8_OS_ZOS)
+  pthread_t tid = trace_event->tid();
+  stream_ << "{\"pid\":" << trace_event->pid()
+          << ",\"tid\":" << int(tid.__ & 0x7fffffff)
+#else
   stream_ << "{\"pid\":" << trace_event->pid()
           << ",\"tid\":" << trace_event->tid()
+#endif
           << ",\"ts\":" << trace_event->ts()
           << ",\"tts\":" << trace_event->tts() << ",\"ph\":\""
           << trace_event->phase() << "\",\"cat\":\""
