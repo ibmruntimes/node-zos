@@ -14,6 +14,9 @@
 #include <mach/mach_time.h>
 #include <pthread.h>
 #endif
+#if V8_OS_ZOS
+#include "zos.h"
+#endif
 
 #include <cstring>
 #include <ostream>
@@ -64,7 +67,7 @@ int64_t ComputeThreadTicks() {
 // _POSIX_MONOTONIC_CLOCK to -1.
 V8_INLINE int64_t ClockNow(clockid_t clk_id) {
 #if (defined(_POSIX_MONOTONIC_CLOCK) && _POSIX_MONOTONIC_CLOCK >= 0) || \
-  defined(V8_OS_BSD) || defined(V8_OS_ANDROID)
+  defined(V8_OS_BSD) || defined(V8_OS_ANDROID) || defined(V8_OS_ZOS)
 // On AIX clock_gettime for CLOCK_THREAD_CPUTIME_ID outputs time with
 // resolution of 10ms. thread_cputime API provides the time in ns
 #if defined(V8_OS_AIX)
@@ -752,8 +755,9 @@ bool TimeTicks::IsHighResolution() {
 
 
 bool ThreadTicks::IsSupported() {
-#if (defined(_POSIX_THREAD_CPUTIME) && (_POSIX_THREAD_CPUTIME >= 0)) || \
-    defined(V8_OS_MACOSX) || defined(V8_OS_ANDROID) || defined(V8_OS_SOLARIS)
+#if defined(_POSIX_THREAD_CPUTIME) && (_POSIX_THREAD_CPUTIME >= 0) || \
+    defined(V8_OS_MACOSX) || defined(V8_OS_ANDROID) || defined(V8_OS_SOLARIS) || \
+    defined(V8_OS_ZOS)
   return true;
 #elif defined(V8_OS_WIN)
   return IsSupportedWin();
@@ -767,7 +771,7 @@ ThreadTicks ThreadTicks::Now() {
 #if V8_OS_MACOSX
   return ThreadTicks(ComputeThreadTicks());
 #elif(defined(_POSIX_THREAD_CPUTIME) && (_POSIX_THREAD_CPUTIME >= 0)) || \
-  defined(V8_OS_ANDROID)
+  defined(V8_OS_ANDROID) || defined(V8_OS_ZOS)
   return ThreadTicks(ClockNow(CLOCK_THREAD_CPUTIME_ID));
 #elif V8_OS_SOLARIS
   return ThreadTicks(gethrvtime() / Time::kNanosecondsPerMicrosecond);
