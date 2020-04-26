@@ -59,11 +59,19 @@ class V8_PLATFORM_EXPORT TraceObject {
       const char** arg_names, const uint8_t* arg_types,
       const uint64_t* arg_values,
       std::unique_ptr<v8::ConvertableToTraceFormat>* arg_convertables,
+#if defined(V8_OS_ZOS)
+      unsigned int flags, int pid, pthread_t tid, int64_t ts, int64_t tts,
+#else
       unsigned int flags, int pid, int tid, int64_t ts, int64_t tts,
+#endif
       uint64_t duration, uint64_t cpu_duration);
 
   int pid() const { return pid_; }
+#if defined(V8_OS_ZOS)
+  pthread_t tid() const { return tid_; }
+#else
   int tid() const { return tid_; }
+#endif
   char phase() const { return phase_; }
   const uint8_t* category_enabled_flag() const {
     return category_enabled_flag_;
@@ -87,7 +95,11 @@ class V8_PLATFORM_EXPORT TraceObject {
 
  private:
   int pid_;
+#if defined(V8_OS_ZOS)
+  pthread_t tid_;
+#else
   int tid_;
+#endif
   char phase_;
   const char* name_;
   const char* scope_;
