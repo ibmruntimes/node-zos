@@ -19,10 +19,13 @@
 
 #include <sys/mman.h>
 #include <sys/stat.h>
+#if defined(V8_OS_ZOS)
+#include <signal.h>
+#endif
 #include <sys/time.h>
 #include <sys/types.h>
 #if defined(__APPLE__) || defined(__DragonFly__) || defined(__FreeBSD__) || \
-    defined(__NetBSD__) || defined(__OpenBSD__)
+    defined(__NetBSD__) || defined(__OpenBSD__) && !defined(V8_OS_ZOS)
 #include <sys/sysctl.h>  // NOLINT, for sysctl
 #endif
 
@@ -61,7 +64,7 @@
 #include <sys/resource.h>
 #endif
 
-#if !defined(_AIX) && !defined(V8_OS_FUCHSIA)
+#if !defined(_AIX) && !defined(V8_OS_FUCHSIA) && !defined(V8_OS_ZOS)
 #include <sys/syscall.h>
 #endif
 
@@ -86,8 +89,18 @@ namespace base {
 
 namespace {
 
+#if defined(V8_OS_ZOS)
+inline bool operator==(const pthread_t &_a, const pthread_t &_b) {
+  return _a.__ == _b.__;
+}
+#endif
+
 // 0 is never a valid thread id.
+#if V8_OS_ZOS
+const pthread_t kNoThread = {0};
+#else
 const pthread_t kNoThread = static_cast<pthread_t>(0);
+#endif
 
 bool g_hard_abort = false;
 
@@ -97,7 +110,7 @@ DEFINE_LAZY_LEAKY_OBJECT_GETTER(RandomNumberGenerator,
                                 GetPlatformRandomNumberGenerator)
 static LazyMutex rng_mutex = LAZY_MUTEX_INITIALIZER;
 
-#if !V8_OS_FUCHSIA
+#if !V8_OS_FUCHSIA && !V8_OS_ZOS 
 #if V8_OS_MACOSX
 // kMmapFd is used to pass vm_alloc flags to tag the region with the user
 // defined tag 255 This helps identify V8-allocated regions in memory analysis
@@ -192,7 +205,7 @@ bool OS::ArmUsingHardFloat() {
 }
 
 #endif  // def __arm__
-#endif
+#endif  // !V8_OS_FUCHSIA && !V8_OS_ZOS 
 
 void OS::Initialize(bool hard_abort, const char* const gc_fake_mmap) {
   g_hard_abort = hard_abort;
@@ -239,6 +252,9 @@ void OS::SetRandomMmapSeed(int64_t seed) {
 
 // static
 void* OS::GetRandomMmapAddr() {
+#if defined(V8_OS_ZOS)
+  return nullptr;
+#endif
   uintptr_t raw_addr;
   {
     MutexGuard guard(rng_mutex.Pointer());
@@ -322,6 +338,7 @@ void* OS::GetRandomMmapAddr() {
 
 // TODO(bbudge) Move Cygwin and Fuchsia stuff into platform-specific files.
 #if !V8_OS_CYGWIN && !V8_OS_FUCHSIA
+#if !V8_OS_ZOS
 // static
 void* OS::Allocate(void* hint, size_t size, size_t alignment,
                    MemoryPermission access) {
@@ -370,12 +387,16 @@ bool OS::Release(void* address, size_t size) {
   DCHECK_EQ(0, size % CommitPageSize());
   return munmap(address, size) == 0;
 }
+#endif // !V8_OS_ZOS
 
 // static
 bool OS::SetPermissions(void* address, size_t size, MemoryPermission access) {
   DCHECK_EQ(0, reinterpret_cast<uintptr_t>(address) % CommitPageSize());
   DCHECK_EQ(0, size % CommitPageSize());
 
+#if defined(V8_OS_ZOS)
+  return true;	
+#else
   int prot = GetProtectionFromMemoryPermission(access);
   int ret = mprotect(address, size, prot);
   if (ret == 0 && access == OS::MemoryPermission::kNoAccess) {
@@ -395,11 +416,15 @@ bool OS::SetPermissions(void* address, size_t size, MemoryPermission access) {
 #endif
 
   return ret == 0;
+#endif
 }
 
 bool OS::DiscardSystemPages(void* address, size_t size) {
   DCHECK_EQ(0, reinterpret_cast<uintptr_t>(address) % CommitPageSize());
   DCHECK_EQ(0, size % CommitPageSize());
+#if V8_OS_ZOS
+  return true;
+#else
 #if defined(OS_MACOSX)
   // On OSX, MADV_FREE_REUSABLE has comparable behavior to MADV_FREE, but also
   // marks the pages with the reusable bit, which allows both Activity Monitor
@@ -423,6 +448,7 @@ bool OS::DiscardSystemPages(void* address, size_t size) {
 #endif
   }
   return ret == 0;
+#endif
 }
 
 // static
@@ -434,7 +460,7 @@ bool OS::HasLazyCommits() {
   return false;
 #endif
 }
-#endif  // !V8_OS_CYGWIN && !V8_OS_FUCHSIA
+#endif  // !V8_OS_CYGWIN && !V8_OS_FUCHSIA && !V8_OS_ZOS
 
 const char* OS::GetGCFakeMMapFile() {
   return g_gc_fake_mmap;
@@ -450,6 +476,7 @@ void OS::Abort() {
   if (g_hard_abort) {
     V8_IMMEDIATE_CRASH();
   }
+
   // Redirect to std abort to signal abnormal program termination.
   abort();
 }
@@ -471,14 +498,19 @@ void OS::DebugBreak() {
 #elif V8_HOST_ARCH_X64
   asm("int $3");
 #elif V8_HOST_ARCH_S390
+#if V8_OS_ZOS
+  // TODO
+#else
   // Software breakpoint instruction is 0x0001
   asm volatile(".word 0x0001");
+#endif
 #else
 #error Unsupported host architecture.
 #endif
 }
 
 
+#ifndef V8_OS_ZOS
 class PosixMemoryMappedFile final : public OS::MemoryMappedFile {
  public:
   PosixMemoryMappedFile(FILE* file, void* memory, size_t size)
@@ -545,13 +577,18 @@ PosixMemoryMappedFile::~PosixMemoryMappedFile() {
   fclose(file_);
 }
 
+#endif //V8_OS_ZOS
 
 int OS::GetCurrentProcessId() {
   return static_cast<int>(getpid());
 }
 
 
+#if defined(V8_OS_ZOS)
+pthread_t OS::GetCurrentThreadId() {
+#else
 int OS::GetCurrentThreadId() {
+#endif
 #if V8_OS_MACOSX || (V8_OS_ANDROID && defined(__APPLE__))
   return static_cast<int>(pthread_mach_thread_np(pthread_self()));
 #elif V8_OS_LINUX
@@ -564,6 +601,8 @@ int OS::GetCurrentThreadId() {
   return static_cast<int>(zx_thread_self());
 #elif V8_OS_SOLARIS
   return static_cast<int>(pthread_self());
+#elif V8_OS_ZOS
+  return pthread_self();
 #else
   return static_cast<int>(reinterpret_cast<intptr_t>(pthread_self()));
 #endif
@@ -795,7 +834,9 @@ static void* ThreadEntry(void* arg) {
   // one).
   { MutexGuard lock_guard(&thread->data()->thread_creation_mutex_); }
   SetThreadName(thread->name());
+#ifndef V8_OS_ZOS
   DCHECK_NE(thread->data()->thread_, kNoThread);
+#endif
   thread->NotifyStartedAndRun();
   return nullptr;
 }
@@ -820,6 +861,14 @@ bool Thread::Start() {
 #elif V8_OS_AIX
     // Default on AIX is 96kB -- bump up to 2MB
     stack_size = 2 * 1024 * 1024;
+#elif V8_OS_ZOS
+    // On z/OS if the _CEE_RUNOPTS STACK64/THREADSTACK64 initial stack size is
+    // less than 4 MB (default for FLAG_stack_size), bump it to 4MB
+    const size_t default_stack_size = 4 * 1024 * 1024;
+    result = pthread_attr_getstacksize(&attr, &stack_size);
+    DCHECK_EQ(0, result);
+    if (stack_size < default_stack_size)
+        stack_size = default_stack_size;
 #endif
   }
   if (stack_size > 0) {
