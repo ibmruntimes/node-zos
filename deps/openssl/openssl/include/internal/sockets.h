@@ -11,7 +11,8 @@
 #ifndef OSSL_INTERNAL_SOCKETS_H
 # define OSSL_INTERNAL_SOCKETS_H
 
-# if defined(OPENSSL_SYS_VXWORKS) || defined(OPENSSL_SYS_UEFI)
+# if defined(OPENSSL_SYS_VXWORKS) || defined(OPENSSL_SYS_UEFI) || \
+     defined(__MVS__)
 #  define NO_SYS_PARAM_H
 # endif
 # ifdef WIN32

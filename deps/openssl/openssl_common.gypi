@@ -56,6 +56,17 @@
         'ENGINESDIR="/dev/null"',
         '__EXTENSIONS__'
       ],
+    }, 'OS=="zos"', {
+      'cflags': [
+        '-qCSECT=openssl'
+      ],
+      'defines': [
+        'OPENSSLDIR="/etc/ssl"',
+        'ENGINESDIR="/dev/null"',
+        'OPENSSL_NO_HW',
+        'NI_MAXHOST=1024',
+        'NI_MAXSERV=32',
+      ],
     }, {
       # linux and others
       'cflags': ['-Wno-missing-field-initializers',],
