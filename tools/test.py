@@ -633,7 +633,7 @@ def KillProcessWithID(pid, signal_to_send=signal.SIGTERM):
       # Try again with killharder z/OS utility
       from distutils.spawn import find_executable
       if find_executable("killharder") is not None:
-	    os.system("killharder " + str(pid));
+        os.system("killharder " + str(pid));
   else:
     os.kill(pid, signal_to_send)
 
