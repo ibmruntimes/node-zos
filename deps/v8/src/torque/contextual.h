@@ -83,6 +83,7 @@ class ContextualVariable {
       : v8::internal::torque::ContextualVariable<VarName, __VA_ARGS__> {}
 
 #if defined(V8_OS_ZOS)
+//FIXME: revert when Clang compiler is available (supports thread_local)
 #define DEFINE_CONTEXTUAL_VARIABLE(VarName)                             \
   template <>                                                           \
   V8_EXPORT_PRIVATE VarName::Scope*& ContextualVariableTop<VarName>() { \
