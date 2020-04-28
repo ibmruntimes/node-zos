@@ -159,7 +159,7 @@ void* Allocate(void* hint, size_t size, OS::MemoryPermission access) {
   return result;
 }
 
-#endif  // !V8_OS_FUCHSIA
+#endif  // !V8_OS_FUCHSIA && !V8_OS_ZOS
 
 }  // namespace
 
@@ -205,7 +205,7 @@ bool OS::ArmUsingHardFloat() {
 }
 
 #endif  // def __arm__
-#endif  // !V8_OS_FUCHSIA && !V8_OS_ZOS 
+#endif  // V8_OS_LINUX || V8_OS_FREEBSD
 
 void OS::Initialize(bool hard_abort, const char* const gc_fake_mmap) {
   g_hard_abort = hard_abort;
@@ -395,6 +395,8 @@ bool OS::SetPermissions(void* address, size_t size, MemoryPermission access) {
   DCHECK_EQ(0, size % CommitPageSize());
 
 #if defined(V8_OS_ZOS)
+  //TODO - should implement, see:
+  //https://www.ibm.com/support/knowledgecenter/SSLTBW_2.2.0/com.ibm.zos.v2r2.bpxb100/mpr.htm
   return true;	
 #else
   int prot = GetProtectionFromMemoryPermission(access);
