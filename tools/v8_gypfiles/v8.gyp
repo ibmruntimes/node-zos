@@ -786,6 +786,12 @@
           'sources': [  ### gcmole(arch:s390) ###
             '<!@pymod_do_main(GN-scraper "<(V8_ROOT)/BUILD.gn"  "\\"v8_base_without_compiler.*?v8_current_cpu == \\"s390.*?sources \+= ")',
           ],
+          'dependencies': [
+            '<!(echo $ZOSLIB_GYP):zoslib#target',
+          ],
+          'include_dirs+': [
+            '<!(echo $ZOSLIB_INCLUDES)',
+          ],
         }],
         ['OS=="win"', {
           'msvs_precompiled_header': '<(V8_ROOT)/../../tools/msvs/pch/v8_pch.h',
@@ -842,7 +848,7 @@
         }],
         # Platforms that don't have Compare-And-Swap (CAS) support need to link atomic library
         # to implement atomic memory access
-        ['v8_current_cpu in ["mips", "mipsel", "mips64", "mips64el", "ppc", "arm"]', {
+        ['v8_current_cpu in ["mips", "mipsel", "mips64", "mips64el", "ppc", "arm", "s390", "s390x"] and OS!="zos"', {
           'link_settings': {
             'libraries': ['-latomic', ],
           },
@@ -860,6 +866,9 @@
       'dependencies': [
         'v8_base_without_compiler',
         'v8_compiler',
+      ],
+      'include_dirs': [
+        '<!(echo $ZOSLIB_INCLUDES)',
       ],
     },  # v8_base
     {
@@ -947,7 +956,7 @@
             '<(V8_ROOT)/src/base/platform/platform-posix.h',
           ],
           'conditions': [
-            ['OS != "aix" and OS != "solaris"', {
+            ['OS != "aix" and OS != "solaris" and OS != "zos"', {
               'sources': [
                 '<(V8_ROOT)/src/base/platform/platform-posix-time.cc',
                 '<(V8_ROOT)/src/base/platform/platform-posix-time.h',
@@ -967,6 +976,21 @@
             ],
           },
         }],
+        ['OS=="zos"', {
+          'dependencies': [
+            '<!(echo $ZOSLIB_GYP):zoslib#target',
+          ],
+          'include_dirs+': [
+            '<!(echo $ZOSLIB_INCLUDES)',
+          ],
+          'sources': [
+            '<(V8_ROOT)/src/base/debug/stack_trace_posix.cc',
+            '<(V8_ROOT)/src/base/platform/platform-zos.cc',
+            '<(V8_ROOT)/src/base/platform/platform-posix.cc',
+            '<(V8_ROOT)/src/base/platform/platform-posix.h',
+            '<(V8_ROOT)/src/s390/semaphore-zos.cc',
+          ]},
+        ],
         ['OS=="aix"', {
           'variables': {
             # Used to differentiate `AIX` and `OS400`(IBM i).
@@ -1280,7 +1304,13 @@
       'sources': [
         '<!@pymod_do_main(GN-scraper "<(V8_ROOT)/BUILD.gn"  "\\"mksnapshot.*?sources = ")',
       ],
+      'include_dirs+': [
+        '<!(echo $ZOSLIB_INCLUDES)',
+      ],
       'conditions': [
+        ['OS=="zos"', {
+          'dependencies': ['<!(echo $ZOSLIB_GYP):zoslib#target'],
+        }],
         ['want_separate_host_toolset', {
           'toolsets': ['host'],
         }],
