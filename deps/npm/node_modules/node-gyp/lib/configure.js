@@ -261,6 +261,8 @@ function configure (gyp, argv, callback) {
         })
       } else {
         candidates = [
+          'out/Release/lib.target/libnode',
+          'out/Debug/lib.target/libnode',
           'out/Release/obj.target/libnode',
           'out/Debug/obj.target/libnode',
           'lib/libnode'
