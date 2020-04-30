@@ -26,7 +26,7 @@
 #include "src/base/win32-headers.h"
 #endif
 #if V8_OS_ZOS
-#include "src/base/sys-info-zos.h"
+#include "zos.h"
 #endif
 
 namespace v8 {
