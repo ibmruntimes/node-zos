@@ -787,10 +787,7 @@
             '<!@pymod_do_main(GN-scraper "<(V8_ROOT)/BUILD.gn"  "\\"v8_base_without_compiler.*?v8_current_cpu == \\"s390.*?sources \+= ")',
           ],
           'dependencies': [
-            '<!(echo $ZOSLIB_GYP):zoslib#target',
-          ],
-          'include_dirs+': [
-            '<!(echo $ZOSLIB_INCLUDES)',
+            '<(static_zoslib_gyp):zoslib#target',
           ],
         }],
         ['OS=="win"', {
@@ -866,9 +863,6 @@
       'dependencies': [
         'v8_base_without_compiler',
         'v8_compiler',
-      ],
-      'include_dirs': [
-        '<!(echo $ZOSLIB_INCLUDES)',
       ],
     },  # v8_base
     {
@@ -978,17 +972,13 @@
         }],
         ['OS=="zos"', {
           'dependencies': [
-            '<!(echo $ZOSLIB_GYP):zoslib#target',
-          ],
-          'include_dirs+': [
-            '<!(echo $ZOSLIB_INCLUDES)',
+            '<(static_zoslib_gyp):zoslib#target',
           ],
           'sources': [
             '<(V8_ROOT)/src/base/debug/stack_trace_posix.cc',
             '<(V8_ROOT)/src/base/platform/platform-zos.cc',
             '<(V8_ROOT)/src/base/platform/platform-posix.cc',
             '<(V8_ROOT)/src/base/platform/platform-posix.h',
-            '<(V8_ROOT)/src/s390/semaphore-zos.cc',
           ]},
         ],
         ['OS=="aix"', {
@@ -1304,12 +1294,9 @@
       'sources': [
         '<!@pymod_do_main(GN-scraper "<(V8_ROOT)/BUILD.gn"  "\\"mksnapshot.*?sources = ")',
       ],
-      'include_dirs+': [
-        '<!(echo $ZOSLIB_INCLUDES)',
-      ],
       'conditions': [
         ['OS=="zos"', {
-          'dependencies': ['<!(echo $ZOSLIB_GYP):zoslib#target'],
+          'dependencies': ['<(static_zoslib_gyp):zoslib#target'],
         }],
         ['want_separate_host_toolset', {
           'toolsets': ['host'],
