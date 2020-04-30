@@ -297,7 +297,8 @@ class TapProgressIndicator(SimpleProgressIndicator):
     logger.info('  stack: |-')
 
     for l in self.traceback.splitlines():
-      logger.info('    ' + l)
+      # Leading whitespaces can cause Jenkins TAP parser error.
+      logger.info('    ' + l.lstrip())
 
   def Starting(self):
     logger.info('TAP version 13')
@@ -620,6 +621,19 @@ class TestOutput(object):
 def KillProcessWithID(pid, signal_to_send=signal.SIGTERM):
   if utils.IsWindows():
     os.popen('taskkill /T /F /PID %d' % pid)
+  elif utils.IsZos():
+    os.kill(pid, signal_to_send)
+    # On z/OS, the process may not be killed with SIGTERM
+    try:
+      # Check if process still exists
+      os.kill(pid, 0)
+    except OSError:
+      pass # process killed
+    else:
+      # Try again with killharder z/OS utility
+      from distutils.spawn import find_executable
+      if find_executable("killharder") is not None:
+        os.system("killharder " + str(pid));
   else:
     os.kill(pid, signal_to_send)
 
