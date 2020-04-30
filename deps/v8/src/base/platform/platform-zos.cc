@@ -44,8 +44,6 @@
 #include "src/base/macros.h"
 #include "src/base/platform/platform.h"
 #include "src/base/platform/platform-posix.h"
-#include "src/s390/semaphore-zos.h"
-#include "src/base/sys-info.h"
 
 #include <mutex>
 #include <unordered_map>
