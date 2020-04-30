@@ -370,6 +370,11 @@ static_optgroup.add_option('--static-zoslib-libpath',
     dest='static_zoslib_libpath',
     help='a directory to search for the static zoslib library')
 
+static_optgroup.add_option('--static-zoslib-gyp',
+    action='store',
+    dest='static_zoslib_gyp',
+    help='path to zoslib.gyp file')
+
 parser.add_option_group(static_optgroup)
 
 parser.add_option('--systemtap-includes',
@@ -1333,6 +1338,10 @@ def configure_v8(o):
     v8_path = os.path.join('deps', 'v8')
     print('Fetching dependencies to build V8 with GN')
     options.build_v8_with_gn = FetchDeps(v8_path)
+  if options.static_zoslib_gyp:
+    o['variables']['static_zoslib_gyp'] = options.static_zoslib_gyp
+  elif options.static_zoslib:
+    raise Exception('--static-zoslib-gyp=<path to zoslib.gyp file> is required with --static-zoslib.')
   o['variables']['build_v8_with_gn'] = b(options.build_v8_with_gn)
 
 
