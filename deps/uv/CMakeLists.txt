@@ -285,6 +285,9 @@ target_include_directories(uv
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   PRIVATE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
+if(CMAKE_SYSTEM_NAME STREQUAL "OS390")
+  target_include_directories(uv PUBLIC $<BUILD_INTERFACE:${ZOSLIB_DIR}/include>)
+endif()
 target_link_libraries(uv ${uv_libraries})
 
 add_library(uv_a STATIC ${uv_sources})
@@ -296,6 +299,9 @@ target_include_directories(uv_a
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   PRIVATE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
+if(CMAKE_SYSTEM_NAME STREQUAL "OS390")
+  target_include_directories(uv_a PUBLIC $<BUILD_INTERFACE:${ZOSLIB_DIR}/include>)
+endif()
 target_link_libraries(uv_a ${uv_libraries})
 
 if(LIBUV_BUILD_TESTS)
