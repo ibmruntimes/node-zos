@@ -3576,8 +3576,6 @@ v8_component("v8_libbase") {
     "src/base/safe_conversions.h",
     "src/base/safe_conversions_impl.h",
     "src/base/small-vector.h",
-    "src/base/sys-info.cc",
-    "src/base/sys-info.h",
     "src/base/template-utils.h",
     "src/base/timezone-cache.h",
     "src/base/type-traits.h",
