@@ -93,10 +93,13 @@ extern char** environ;
 #ifdef __MVS__
 #include <zos.h>
 // Initialize environment and zoslib
-__init_zoslib __nodezoslib("__IPC_CLEANUP", "__NODERUNDEBUG", "__NODERUNTIMELIMIT"
+__init_zoslib __nodezoslib("__IPC_CLEANUP", 
+              "__NODERUNDEBUG", 
+              "__NODERUNTIMELIMIT"
               "__NODEFORKMAX");
 
-__setlibpath __nodelibpath; // Initialize LIBPATH
+// Initialize LIBPATH
+__setlibpath __nodelibpath;
 #endif
 
 namespace node {

@@ -950,16 +950,16 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
       # TODO(piman): when everything is cross-compile safe, remove lib.target
       if self.flavor == 'zos':
         self.WriteLn('cmd_%s = LIBPATH=$(builddir)/lib.host:'
-                   '$(builddir)/lib.target:$(builddir)/obj.target:$$LIBPATH; '
-                   'export LIBPATH; '
-                   '%s%s'
-                   % (name, cd_action, command))
+                     '$(builddir)/lib.target:$$LIBPATH; '
+                     'export LIBPATH; '
+                     '%s%s'
+                     % (name, cd_action, command))
       else:
         self.WriteLn('cmd_%s = LD_LIBRARY_PATH=$(builddir)/lib.host:'
-                   '$(builddir)/lib.target:$$LD_LIBRARY_PATH; '
-                   'export LD_LIBRARY_PATH; '
-                   '%s%s'
-                   % (name, cd_action, command))
+                     '$(builddir)/lib.target:$$LD_LIBRARY_PATH; '
+                     'export LD_LIBRARY_PATH; '
+                     '%s%s'
+                     % (name, cd_action, command))
       self.WriteLn()
       outputs = [self.Absolutify(o) for o in outputs]
       # The makefile rules are all relative to the top dir, but the gyp actions
@@ -1706,7 +1706,7 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
       install_path = self._InstallableTargetInstallPath()
       installable_deps = []
       if (self.flavor != 'zos'):
-        installable_deps.append(self.outputr)
+        installable_deps.append(self.output)
       if (self.flavor == 'mac' and not 'product_dir' in spec and
           self.toolset == 'target'):
         # On mac, products are created in install_path immediately.

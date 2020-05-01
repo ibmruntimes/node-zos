@@ -117,11 +117,11 @@ def npm_files(action):
   if sys.platform == 'zos':
     link_path = abspath(install_path, 'bin/node-gyp')
     if action == uninstall:
-        action([link_path], 'bin/node-gyp')
+      action([link_path], 'bin/node-gyp')
     elif action == install:
-        try_symlink('../lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js', link_path)
+      try_symlink('../lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js', link_path)
     else:
-        assert 0 # unhandled action type
+      assert 0 # unhandled action type
 
 def subdir_files(path, dest, action):
   ret = {}
