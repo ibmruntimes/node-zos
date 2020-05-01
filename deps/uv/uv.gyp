@@ -360,7 +360,12 @@
             'src/unix/pthread-fixes.c',
             'src/unix/os390.c',
             'src/unix/os390-syscalls.c'
-          ]
+          ],
+          'cflags': [
+            '-qenum=int',
+            '-qexportall',
+            '-qascii',
+          ],
         }],
       ]
     },

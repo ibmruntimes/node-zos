@@ -11,7 +11,7 @@
     'configurations': {
       'Debug': {
         'defines': [ 'DEBUG', '_DEBUG' ],
-        'cflags': [ '-g' ],
+        'cflags': [ '-g', '-O0' ],
         'msvs_settings': {
           'VCCLCompilerTool': {
             'target_conditions': [
@@ -35,7 +35,7 @@
         },
         'conditions': [
           ['OS != "zos"', {
-            'cflags': [ '-O0', '-fno-common', '-fwrapv' ]
+            'cflags': [ '-fno-common', '-fwrapv' ]
           }],
           ['OS == "android"', {
             'cflags': [ '-fPIE' ],
