@@ -90,6 +90,18 @@ extern char** environ;
 #include <signal.h>
 #endif
 
+#ifdef __MVS__
+#include <zos.h>
+// Initialize environment and zoslib
+__init_zoslib __nodezoslib("__IPC_CLEANUP", 
+              "__NODERUNDEBUG", 
+              "__NODERUNTIMELIMIT"
+              "__NODEFORKMAX");
+
+// Initialize LIBPATH
+__setlibpath __nodelibpath;
+#endif
+
 namespace node {
 namespace per_process {
 extern bool linux_at_secure;
@@ -109,6 +121,12 @@ int main(int argc, char* argv[]) {
     act.sa_handler = SIG_IGN;
     sigaction(SIGPIPE, &act, nullptr);
   }
+#endif
+
+#if defined(__MVS__)
+    __set_autocvt_on_untagged_fd_stream(STDIN_FILENO, 1047, 1);
+    __set_autocvt_on_untagged_fd_stream(STDOUT_FILENO, 1047, 1);
+    __set_autocvt_on_untagged_fd_stream(STDERR_FILENO, 1047, 1);
 #endif
 
 #if defined(__linux__)

@@ -7,6 +7,7 @@ import errno
 import os
 import shutil
 import sys
+import utils
 
 # set at init time
 node_prefix = '/usr/local' # PREFIX variable from Makefile
@@ -111,6 +112,17 @@ def npm_files(action):
   else:
     assert 0 # unhandled action type
 
+  # On z/OS, we install node-gyp for convenience as native add-ons
+  # are dependend on
+  if sys.platform == 'zos':
+    link_path = abspath(install_path, 'bin/node-gyp')
+    if action == uninstall:
+      action([link_path], 'bin/node-gyp')
+    elif action == install:
+      try_symlink('../lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js', link_path)
+    else:
+      assert 0 # unhandled action type
+
 def subdir_files(path, dest, action):
   ret = {}
   for dirpath, dirnames, filenames in os.walk(path):
@@ -140,7 +152,23 @@ def files(action):
   if 'false' == variables.get('node_shared'):
     action([output_prefix + output_file], 'bin/' + output_file)
   else:
-    action([output_prefix + output_file], 'lib/' + output_file)
+    if sys.platform == 'zos':
+      # Install libnode.version.x
+      action([output_prefix + output_file], 'lib/' + output_file)
+
+      # Create libnode.x that references libnode.so (for native node module compat)
+      so_name = 'libnode.' + re.sub(r'\.x$', '.so', variables.get('shlib_suffix'))
+      os.system("sed -e 's/" + so_name + "/libnode.so/g'" + " " + 
+        abspath(install_path, 'lib/' + output_file)  + " > " + abspath(install_path, 'lib/libnode.x'))
+
+      # Install libnode.version.so
+      action([output_prefix + so_name], 'lib/' + so_name)
+
+      # Create symlink of libnode.so -> libnode.version.so (for native node module compat)
+      link_path = abspath(install_path, 'lib/libnode.so')
+      try_symlink(so_name, link_path)
+    else:
+      action([output_prefix + output_file], 'lib/' + output_file)
 
   if 'true' == variables.get('node_use_dtrace'):
     action(['out/Release/node.d'], 'lib/dtrace/node.d')
@@ -157,6 +185,10 @@ def files(action):
     action(['doc/node.1'], 'share/man/man1/')
 
   if 'true' == variables.get('node_install_npm'): npm_files(action)
+
+  # z/OS does not have an ICU offering, ship built dat files
+  if sys.platform == 'zos':
+    action([output_prefix + 'obj/gen/icutmp/icusmdt64.dat'], 'lib/')
 
   headers(action)
 
